@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.13.x
+
+before_install:
+  - wget -O lib.zip https://ai.arcsoft.com.cn/packages/arcface/linux/ArcSoft_ArcFace_Linux_x64_V2.2.zip
+  - unzip lib.zip -d ./arcsoftlib/
+  - sudo cp ./arcsoftlib/lib/linux_x64/libarcsoft_face.so /usr/lib
+  - sudo cp ./arcsoftlib/lib/linux_x64/libarcsoft_face_engine.so /usr/lib
+
+script:
+  - go build
