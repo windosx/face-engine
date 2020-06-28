@@ -22,10 +22,11 @@ type FaceEngine struct {
 
 // 多人脸信息结构体
 type MultiFaceInfo struct {
-	FaceRect   []Rect  // 人脸框信息
-	FaceOrient []int32 // 输入图像的角度
-	FaceNum    int32   // 检测到的人脸个数
-	FaceID     []int32 // face ID，IMAGE模式下不返回FaceID
+	FaceRect   	[]Rect  // 人脸框信息
+	FaceOrient 	[]int32 // 输入图像的角度
+	FaceNum    	int32   // 检测到的人脸个数
+	FaceID     	[]int32 // face ID，IMAGE模式下不返回FaceID
+	native		*C.ASF_MultiFaceInfo
 }
 
 // 人脸坐标结构体
@@ -185,28 +186,19 @@ func Activation(appId, sdkKey string) (err error) {
 	return
 }
 
-// IMAGE模式:人脸检测
-func (engine *FaceEngine) ASFDetectFaces(width, height int, format C.MInt32, imgData []byte) (*C.ASF_MultiFaceInfo, error) {
-	faceInfo := &C.ASF_MultiFaceInfo{}
+// 人脸检测，目前不支持IR图像数据检测
+func (engine *FaceEngine) ASFDetectFaces(width, height int, format C.MInt32, imgData []byte) (faceInfo MultiFaceInfo, err error) {
+	asfFaceInfo := &C.ASF_MultiFaceInfo{}
 	r := C.ASFDetectFaces(C.MHandle(unsafe.Pointer(engine.handle)),
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
 		(*C.MUInt8)(unsafe.Pointer(&imgData[0])),
-		faceInfo,
+		asfFaceInfo,
 		C.ASF_DETECT_MODEL_RGB,
 	)
 	if r != C.MOK {
 		return faceInfo, fmt.Errorf("人脸检测失败!错误码: %d", int(r))
-	}
-	return faceInfo, nil
-}
-
-// 人脸检测（将返回结果转为Go的结构体类型）,目前不支持IR图像数据检测
-func (engine *FaceEngine) DetectFaces(width, height int, format C.MInt32, imgData []byte) (faceInfo MultiFaceInfo, err error) {
-	asfFaceInfo, err := engine.ASFDetectFaces(width, height, format, imgData)
-	if err != nil {
-		return
 	}
 	faceNum := int32(asfFaceInfo.faceNum)
 	faceInfo.FaceRect = (*[50]Rect)(unsafe.Pointer(asfFaceInfo.faceRect))[:faceNum:faceNum]
@@ -215,18 +207,19 @@ func (engine *FaceEngine) DetectFaces(width, height int, format C.MInt32, imgDat
 		faceInfo.FaceID = (*[50]int32)(unsafe.Pointer(asfFaceInfo.faceID))[:faceNum:faceNum]
 	}
 	faceInfo.FaceNum = faceNum
+	faceInfo.native = asfFaceInfo
 	return
 }
 
 // 年龄/性别/人脸3D角度（该接口仅支持RGB图像），最多支持4张人脸信息检测，超过部分返回未知
 // RGB活体仅支持单人脸检测，该接口不支持检测IR活体
-func (engine *FaceEngine) Process(width, height int, format C.MInt32, imgData []byte, detectedFaces *C.ASF_MultiFaceInfo, combinedMask C.MInt32) error {
+func (engine *FaceEngine) Process(width, height int, format C.MInt32, imgData []byte, detectedFaces MultiFaceInfo, combinedMask C.MInt32) error {
 	r := C.ASFProcess(C.MHandle(unsafe.Pointer(engine.handle)),
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
 		(*C.MUInt8)(unsafe.Pointer(&imgData[0])),
-		detectedFaces,
+		detectedFaces.native,
 		combinedMask)
 	if r != C.MOK {
 		return fmt.Errorf("检测人脸信息失败!错误码: %v", int(r))
@@ -235,13 +228,13 @@ func (engine *FaceEngine) Process(width, height int, format C.MInt32, imgData []
 }
 
 // 该接口目前仅支持单人脸IR活体检测（不支持年龄、性别、3D角度的检测），默认取第一张人脸
-func (engine *FaceEngine) ProcessIR(width, height int, format C.MInt32, imgData []byte, detectedFaces *C.ASF_MultiFaceInfo, combinedMask C.MInt32) error {
+func (engine *FaceEngine) ProcessIR(width, height int, format C.MInt32, imgData []byte, detectedFaces MultiFaceInfo, combinedMask C.MInt32) error {
 	r := C.ASFProcess(C.MHandle(unsafe.Pointer(engine.handle)),
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
 		(*C.MUInt8)(unsafe.Pointer(&imgData[0])),
-		detectedFaces,
+		detectedFaces.native,
 		combinedMask)
 	if r != C.MOK {
 		return fmt.Errorf("检测人脸IR活体信息失败!错误码: %v", int(r))
