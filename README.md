@@ -8,7 +8,7 @@
 
 目前已适配的版本：
 [v2.2.0](https://github.com/windosx/face-engine/tree/v2.2.0)
-[v3.0.0](https://github.com/windosx/face-engine/tree/v3.0.3)
+[v3.0.0](https://github.com/windosx/face-engine/tree/v3.0.4)
 
 开始使用
 ---

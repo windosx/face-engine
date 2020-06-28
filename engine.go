@@ -187,7 +187,7 @@ func Activation(appId, sdkKey string) (err error) {
 }
 
 // 人脸检测，目前不支持IR图像数据检测
-func (engine *FaceEngine) ASFDetectFaces(width, height int, format C.MInt32, imgData []byte) (faceInfo MultiFaceInfo, err error) {
+func (engine *FaceEngine) DetectFaces(width, height int, format C.MInt32, imgData []byte) (faceInfo MultiFaceInfo, err error) {
 	asfFaceInfo := &C.ASF_MultiFaceInfo{}
 	r := C.ASFDetectFaces(C.MHandle(unsafe.Pointer(engine.handle)),
 		C.MInt32(width),

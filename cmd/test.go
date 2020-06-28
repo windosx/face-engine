@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 	// 检测人脸
-	info, err := engine.ASFDetectFaces(width-width%4, height, ColorFormatBGR24, imageData)
+	info, err := engine.DetectFaces(width-width%4, height, ColorFormatBGR24, imageData)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return
