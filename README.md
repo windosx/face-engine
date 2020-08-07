@@ -12,7 +12,8 @@
 
 开始使用
 ---
-* 安装：`go get github.com/windosx/face-engine/v3`
+* 安装方式一（不使用go mod）：`go get -d github.com/windosx/face-engine`
+* 安装方式二（使用go mod）：`go get github.com/windosx/face-engine/v3`
 * 编译：`go build -o test github.com/windosx/face-engine/v3/cmd`
 * 测试：`./test`
 * 库文件：Linux下将`libarcsoft_face.so`, `libarcsoft_face_engine.so`放入`/usr/lib`目录
