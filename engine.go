@@ -1,8 +1,8 @@
 package face_engine
 
 /*
-#cgo CFLAGS	: -I./include
-#cgo LDFLAGS: -larcsoft_face_engine
+#cgo CFLAGS		: -I./include
+#cgo LDFLAGS	: -larcsoft_face_engine
 #include <stdlib.h>
 #include "merror.h"
 #include "asvloffscreen.h"
@@ -22,11 +22,11 @@ type FaceEngine struct {
 
 // 多人脸信息结构体
 type MultiFaceInfo struct {
-	FaceRect   	[]Rect  // 人脸框信息
-	FaceOrient 	[]int32 // 输入图像的角度
-	FaceNum    	int32   // 检测到的人脸个数
-	FaceID     	[]int32 // face ID，IMAGE模式下不返回FaceID
-	native		*C.ASF_MultiFaceInfo
+	FaceRect   []Rect  // 人脸框信息
+	FaceOrient []int32 // 输入图像的角度
+	FaceNum    int32   // 检测到的人脸个数
+	FaceID     []int32 // face ID，IMAGE模式下不返回FaceID
+	native     *C.ASF_MultiFaceInfo
 }
 
 // 人脸坐标结构体
@@ -72,6 +72,8 @@ type SingleFaceInfo struct {
 type FaceFeature struct {
 	Feature     []byte // 人脸特征信息
 	FeatureSize int32  // 人脸特征信息长度
+	native      *C.ASF_FaceFeature
+	featurePtr  *C.MByte
 }
 
 // 年龄信息结构体
@@ -102,26 +104,26 @@ type LivenessInfo struct {
 }
 
 const (
-	DetectModeVideo = C.ASF_DETECT_MODE_VIDEO
-	DetectModeImage = C.ASF_DETECT_MODE_IMAGE
-	OrientPriority0 = C.ASF_OP_0_ONLY
-	OrientPriority90 = C.ASF_OP_90_ONLY
-	OrientPriority270 = C.ASF_OP_270_ONLY
-	OrientPriority180 = C.ASF_OP_180_ONLY
+	DetectModeVideo         = C.ASF_DETECT_MODE_VIDEO
+	DetectModeImage         = C.ASF_DETECT_MODE_IMAGE
+	OrientPriority0         = C.ASF_OP_0_ONLY
+	OrientPriority90        = C.ASF_OP_90_ONLY
+	OrientPriority270       = C.ASF_OP_270_ONLY
+	OrientPriority180       = C.ASF_OP_180_ONLY
 	OrientPriorityHigherExt = C.ASF_OP_ALL_OUT
-	EnableNone            = C.ASF_NONE
-	EnableFaceDetect      = C.ASF_FACE_DETECT
-	EnableFaceRecognition = C.ASF_FACERECOGNITION
-	EnableAge             = C.ASF_AGE
-	EnableGender          = C.ASF_GENDER
-	EnableFace3DAngle     = C.ASF_FACE3DANGLE
-	EnableLiveness        = C.ASF_LIVENESS
-	EnableIRLiveness      = C.ASF_IR_LIVENESS
-	ColorFormatBGR24      = C.ASVL_PAF_RGB24_B8G8R8
-	ColorFormatNV12       = C.ASVL_PAF_NV12
-	ColorFormatNV21       = C.ASVL_PAF_NV21
-	ColorFormatI420       = C.ASVL_PAF_I420
-	ColorFormatYUYV       = C.ASVL_PAF_YUYV
+	EnableNone              = C.ASF_NONE
+	EnableFaceDetect        = C.ASF_FACE_DETECT
+	EnableFaceRecognition   = C.ASF_FACERECOGNITION
+	EnableAge               = C.ASF_AGE
+	EnableGender            = C.ASF_GENDER
+	EnableFace3DAngle       = C.ASF_FACE3DANGLE
+	EnableLiveness          = C.ASF_LIVENESS
+	EnableIRLiveness        = C.ASF_IR_LIVENESS
+	ColorFormatBGR24        = C.ASVL_PAF_RGB24_B8G8R8
+	ColorFormatNV12         = C.ASVL_PAF_NV12
+	ColorFormatNV21         = C.ASVL_PAF_NV21
+	ColorFormatI420         = C.ASVL_PAF_I420
+	ColorFormatYUYV         = C.ASVL_PAF_YUYV
 )
 
 // 创建一个新的引擎实例
@@ -268,8 +270,8 @@ func (engine *FaceEngine) GetVersion() Version {
 }
 
 // 单人脸特征提取
-func (engine *FaceEngine) ASFFaceFeatureExtract(width, height int, format C.MInt32, imgData []byte, faceInfo *SingleFaceInfo) (asfFaceFeature *C.ASF_FaceFeature, err error) {
-	asfFaceFeature = &C.ASF_FaceFeature{}
+func (engine *FaceEngine) FaceFeatureExtract(width, height int, format C.MInt32, imgData []byte, faceInfo SingleFaceInfo) (faceFeature FaceFeature, err error) {
+	asfFaceFeature := &C.ASF_FaceFeature{}
 	asfFaceInfo := &C.ASF_SingleFaceInfo{
 		C.MRECT{
 			C.MInt32(faceInfo.FaceRect.Left),
@@ -289,22 +291,27 @@ func (engine *FaceEngine) ASFFaceFeatureExtract(width, height int, format C.MInt
 		err = fmt.Errorf("提取人脸特征失败!错误码: %d", int(r))
 	}
 	length := int32(asfFaceFeature.featureSize)
+	faceFeature.FeatureSize = length
+	faceFeature.Feature = make([]byte, length)
 	byteArr := (*[1 << 28]byte)(unsafe.Pointer(asfFaceFeature.feature))[:length:length]
 	arr := (*C.MByte)(C.malloc(C.size_t(int32(asfFaceFeature.featureSize))))
+	faceFeature.featurePtr = arr
 	ps := (*[1 << 28]C.MByte)(unsafe.Pointer(arr))[:length:length]
 	for i := 0; i < len(ps); i++ {
 		ps[i] = C.MByte(byteArr[i])
+		faceFeature.Feature[i] = byteArr[i]
 	}
 	asfFaceFeature.feature = arr
-	return asfFaceFeature, err
+	faceFeature.native = asfFaceFeature
+	return faceFeature, err
 }
 
 // 人脸特征比对
-func (engine *FaceEngine) FaceFeatureCompare(feature1, feature2 *C.ASF_FaceFeature) (float32, error) {
+func (engine *FaceEngine) FaceFeatureCompare(feature1, feature2 FaceFeature) (float32, error) {
 	var confidenceLevel float32 = 0
 	r := C.ASFFaceFeatureCompare(C.MHandle(unsafe.Pointer(engine.handle)),
-		feature1,
-		feature2,
+		feature1.native,
+		feature2.native,
 		(*C.MFloat)(unsafe.Pointer(&confidenceLevel)),
 		C.ASF_DETECT_MODEL_RGB,
 	)
@@ -394,4 +401,24 @@ func (engine *FaceEngine) Destroy() error {
 		return fmt.Errorf("销毁引擎失败!错误码: %d", int(r))
 	}
 	return nil
+}
+
+// 从多人脸结构体中提取单人脸信息
+func GetSingleFaceInfo(multiFaceInfo MultiFaceInfo) (faceInfo []SingleFaceInfo) {
+	faceInfo = make([]SingleFaceInfo, multiFaceInfo.FaceNum)
+	for i := 0; i < len(faceInfo); i++ {
+		faceInfo[i].FaceRect = Rect{
+			Left:   multiFaceInfo.FaceRect[i].Left,
+			Top:    multiFaceInfo.FaceRect[i].Top,
+			Right:  multiFaceInfo.FaceRect[i].Right,
+			Bottom: multiFaceInfo.FaceRect[i].Bottom,
+		}
+		faceInfo[i].FaceOrient = multiFaceInfo.FaceOrient[i]
+	}
+	return
+}
+
+// 释放内存
+func (feature *FaceFeature) Release() {
+	C.free(unsafe.Pointer(feature.featurePtr))
 }
