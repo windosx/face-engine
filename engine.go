@@ -17,7 +17,7 @@ import (
 
 // 引擎结构体
 type FaceEngine struct {
-	handle uintptr
+	handle C.MHandle
 }
 
 // 多人脸信息结构体
@@ -191,7 +191,7 @@ func Activation(appId, sdkKey string) (err error) {
 // 人脸检测，目前不支持IR图像数据检测
 func (engine *FaceEngine) DetectFaces(width, height int, format C.MInt32, imgData []byte) (faceInfo MultiFaceInfo, err error) {
 	asfFaceInfo := &C.ASF_MultiFaceInfo{}
-	r := C.ASFDetectFaces(C.MHandle(unsafe.Pointer(engine.handle)),
+	r := C.ASFDetectFaces(engine.handle,
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
@@ -216,7 +216,7 @@ func (engine *FaceEngine) DetectFaces(width, height int, format C.MInt32, imgDat
 // 年龄/性别/人脸3D角度（该接口仅支持RGB图像），最多支持4张人脸信息检测，超过部分返回未知
 // RGB活体仅支持单人脸检测，该接口不支持检测IR活体
 func (engine *FaceEngine) Process(width, height int, format C.MInt32, imgData []byte, detectedFaces MultiFaceInfo, combinedMask C.MInt32) error {
-	r := C.ASFProcess(C.MHandle(unsafe.Pointer(engine.handle)),
+	r := C.ASFProcess(engine.handle,
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
@@ -231,7 +231,7 @@ func (engine *FaceEngine) Process(width, height int, format C.MInt32, imgData []
 
 // 该接口目前仅支持单人脸IR活体检测（不支持年龄、性别、3D角度的检测），默认取第一张人脸
 func (engine *FaceEngine) ProcessIR(width, height int, format C.MInt32, imgData []byte, detectedFaces MultiFaceInfo, combinedMask C.MInt32) error {
-	r := C.ASFProcess(C.MHandle(unsafe.Pointer(engine.handle)),
+	r := C.ASFProcess(engine.handle,
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
@@ -252,7 +252,7 @@ func (engine *FaceEngine) SetLivenessParam(threshold LivenessThreshold) error {
 		thresholdmodel_BGR: C.MFloat(threshold.ThresholdModelBGR),
 		thresholdmodel_IR:  C.MFloat(threshold.ThresholdModelIR),
 	}
-	r := C.ASFSetLivenessParam(C.MHandle(unsafe.Pointer(engine.handle)), asfLivenessThreshold)
+	r := C.ASFSetLivenessParam(engine.handle, asfLivenessThreshold)
 	if r != C.MOK {
 		return fmt.Errorf("设置活体置信度失败!错误码: %d", int(r))
 	}
@@ -280,7 +280,7 @@ func (engine *FaceEngine) FaceFeatureExtract(width, height int, format C.MInt32,
 			C.MInt32(faceInfo.FaceRect.Bottom)},
 		C.MInt32(faceInfo.FaceOrient)}
 	r := C.ASFFaceFeatureExtract(
-		C.MHandle(unsafe.Pointer(engine.handle)),
+		engine.handle,
 		C.MInt32(width),
 		C.MInt32(height),
 		format,
@@ -309,7 +309,7 @@ func (engine *FaceEngine) FaceFeatureExtract(width, height int, format C.MInt32,
 // 人脸特征比对
 func (engine *FaceEngine) FaceFeatureCompare(feature1, feature2 FaceFeature) (float32, error) {
 	var confidenceLevel float32 = 0
-	r := C.ASFFaceFeatureCompare(C.MHandle(unsafe.Pointer(engine.handle)),
+	r := C.ASFFaceFeatureCompare(engine.handle,
 		feature1.native,
 		feature2.native,
 		(*C.MFloat)(unsafe.Pointer(&confidenceLevel)),
@@ -324,7 +324,7 @@ func (engine *FaceEngine) FaceFeatureCompare(feature1, feature2 FaceFeature) (fl
 // 获取年龄信息
 func (engine *FaceEngine) GetAge() (AgeInfo, error) {
 	asfAgeInfo := &C.ASF_AgeInfo{}
-	r := C.ASFGetAge((C.MHandle)(unsafe.Pointer(engine.handle)), asfAgeInfo)
+	r := C.ASFGetAge((C.MHandle)(engine.handle), asfAgeInfo)
 	if r != C.MOK {
 		return AgeInfo{}, fmt.Errorf("获取年龄信息失败!错误码: %d", int(r))
 	}
@@ -338,7 +338,7 @@ func (engine *FaceEngine) GetAge() (AgeInfo, error) {
 // 获取性别信息
 func (engine *FaceEngine) GetGender() (GenderInfo, error) {
 	asfGenderInfo := &C.ASF_GenderInfo{}
-	r := C.ASFGetGender((C.MHandle)(unsafe.Pointer(engine.handle)), asfGenderInfo)
+	r := C.ASFGetGender((C.MHandle)(engine.handle), asfGenderInfo)
 	if r != C.MOK {
 		return GenderInfo{}, fmt.Errorf("获取性别信息失败!错误码: %d", int(r))
 	}
@@ -352,7 +352,7 @@ func (engine *FaceEngine) GetGender() (GenderInfo, error) {
 // 获取3D角度信息
 func (engine *FaceEngine) GetFace3DAngle() (Face3DAngle, error) {
 	asfFace3DAngle := &C.ASF_Face3DAngle{}
-	r := C.ASFGetFace3DAngle((C.MHandle)(unsafe.Pointer(engine.handle)), asfFace3DAngle)
+	r := C.ASFGetFace3DAngle((C.MHandle)(engine.handle), asfFace3DAngle)
 	if r != C.MOK {
 		return Face3DAngle{}, fmt.Errorf("获取3D角度信息失败!错误码: %d", int(r))
 	}
@@ -369,7 +369,7 @@ func (engine *FaceEngine) GetFace3DAngle() (Face3DAngle, error) {
 // 获取RGB活体结果
 func (engine *FaceEngine) GetLivenessScore() (LivenessInfo, error) {
 	asfLivenessInfo := &C.ASF_LivenessInfo{}
-	r := C.ASFGetLivenessScore((C.MHandle)(unsafe.Pointer(engine.handle)), asfLivenessInfo)
+	r := C.ASFGetLivenessScore((C.MHandle)(engine.handle), asfLivenessInfo)
 	if r != C.MOK {
 		return LivenessInfo{}, fmt.Errorf("获取活体信息失败!错误码: %d", int(r))
 	}
@@ -383,7 +383,7 @@ func (engine *FaceEngine) GetLivenessScore() (LivenessInfo, error) {
 // 获取IR活体结果
 func (engine *FaceEngine) GetLivenessScoreIR() (LivenessInfo, error) {
 	asfLivenessInfo := &C.ASF_LivenessInfo{}
-	r := C.ASFGetLivenessScore_IR((C.MHandle)(unsafe.Pointer(engine.handle)), asfLivenessInfo)
+	r := C.ASFGetLivenessScore_IR((C.MHandle)(engine.handle), asfLivenessInfo)
 	if r != C.MOK {
 		return LivenessInfo{}, fmt.Errorf("获取活体信息失败!错误码: %d", int(r))
 	}
@@ -396,7 +396,7 @@ func (engine *FaceEngine) GetLivenessScoreIR() (LivenessInfo, error) {
 
 // 销毁引擎
 func (engine *FaceEngine) Destroy() error {
-	r := C.ASFUninitEngine(C.MHandle(unsafe.Pointer(engine.handle)))
+	r := C.ASFUninitEngine(engine.handle)
 	if r != C.MOK {
 		return fmt.Errorf("销毁引擎失败!错误码: %d", int(r))
 	}
