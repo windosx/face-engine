@@ -293,7 +293,7 @@ func (engine *FaceEngine) FaceFeatureExtract(width, height int, format C.MInt32,
 		asfFaceInfo,
 		asfFaceFeature)
 	if r != C.MOK {
-		err = newError(int(r), "提取人脸特征失败")
+		return FaceFeature{}, newError(int(r), "提取人脸特征失败")
 	}
 	length := int32(asfFaceFeature.featureSize)
 	faceFeature.FeatureSize = length
@@ -425,7 +425,9 @@ func GetSingleFaceInfo(multiFaceInfo MultiFaceInfo) (faceInfo []SingleFaceInfo) 
 
 // 释放内存
 func (feature *FaceFeature) Release() {
-	C.free(unsafe.Pointer(feature.featurePtr))
+	if feature.featurePtr != nil {
+		C.free(unsafe.Pointer(feature.featurePtr))
+	}
 }
 
 // 实现Error接口
