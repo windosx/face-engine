@@ -311,6 +311,32 @@ func (engine *FaceEngine) FaceFeatureExtract(width, height int, format C.MInt32,
 	return faceFeature, err
 }
 
+
+
+//读取提取后保存的特征，特征可通过文件形式保存至本地或数据库的blob类型字段，并通过这个函数返回FaceFeature结构体
+//调用：
+//var FromFile FaceFeature
+//f, err := os.OpenFile("./face.data", os.O_RDONLY,0600)
+//defer f.Close()
+//t,_ := ioutil.ReadAll(f)
+//FromFile.FaceTureByByte(t)
+//FromFile即可放入FaceFeatureCompare函数与其他特征进行对比
+func (this *FaceFeature) FaceTureByByte(bytes []byte)(err error){		//(featture FaceFeature,err error)
+	asfFaceFeature := &C.ASF_FaceFeature{}
+	arr := (*C.MByte)(C.malloc(C.size_t(int32(len(bytes)))))
+	featurePtr := (*C.uchar)(unsafe.Pointer(C.CString(string(bytes))))
+	asfFaceFeature.feature = featurePtr
+	asfFaceFeature.featureSize = C.int(len(bytes))
+	this.Feature = bytes
+	this.FeatureSize = int32(len(bytes))
+	this.featurePtr = arr
+	this.native = asfFaceFeature
+	return
+}
+
+
+
+
 // 人脸特征比对
 func (engine *FaceEngine) FaceFeatureCompare(feature1, feature2 FaceFeature) (float32, error) {
 	var confidenceLevel float32 = 0
