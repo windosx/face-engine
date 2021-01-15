@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.14.x
+
+before_install:
+  - wget -O lib.zip https://github.com/windosx/face-engine/releases/download/v3.0.4/libarcsoft_linux_x64.zip
+  - unzip lib.zip -d ./arcsoftlib/
+  - sudo cp ./arcsoftlib/libarcsoft_face.so /usr/lib
+  - sudo cp ./arcsoftlib/libarcsoft_face_engine.so /usr/lib
+
+script:
+  - go build -o test github.com/windosx/face-engine/v3/cmd
+  - chmod +x test
+  - ./test
