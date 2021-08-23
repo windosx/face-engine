@@ -173,7 +173,7 @@ MRESULT ASFDetectFaces(
 MRESULT ASFDetectFacesEx(
         MHandle hEngine,                            // [in] 引擎handle
         LPASF_ImageData imgData,                            // [in] 图片数据
-        LPASF_MultiFaceInfo detectedFaces,                        // [out] 检测到的人脸信息
+        ASF_MultiFaceInfo *detectedFaces,                        // [out] 检测到的人脸信息
         enum ASF_DetectModel detectModel //= ASF_DETECT_MODEL_RGB	// [in]	预留字段，当前版本使用默认参数即可
 );
 
@@ -214,7 +214,7 @@ MRESULT ASFProcess(
 MRESULT ASFProcessEx(
         MHandle hEngine,            // [in] 引擎handle
         LPASF_ImageData imgData,            // [in] 图片数据
-        LPASF_MultiFaceInfo detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
+        ASF_MultiFaceInfo *detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
         MInt32 combinedMask        // [in] 只支持初始化时候指定需要检测的功能，在process时进一步在这个已经指定的功能集中继续筛选
         //      例如初始化的时候指定检测年龄和性别，在process的时候可以只检测年龄，但是不能检测除年龄和性别之外的功能
 );
@@ -228,7 +228,7 @@ MRESULT ASFProcess_IR(
         MInt32 height,                // [in] 图片高度
         MInt32 format,                // [in] 颜色空间格式
         MUInt8 *imgData,            // [in] 图片数据
-        LPASF_MultiFaceInfo detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
+        ASF_MultiFaceInfo *detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
         MInt32 combinedMask        // [in] 目前只支持传入ASF_IR_LIVENESS属性的传入，且初始化接口需要传入
 );
 
@@ -239,7 +239,7 @@ MRESULT ASFProcess_IR(
 MRESULT ASFProcessEx_IR(
         MHandle hEngine,            // [in] 引擎handle
         LPASF_ImageData imgData,            // [in] 图片数据
-        LPASF_MultiFaceInfo detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
+        ASF_MultiFaceInfo *detectedFaces,        // [in] 人脸信息，用户根据待检测的功能选择需要使用的人脸。
         MInt32 combinedMask        // [in] 目前只支持传入ASF_IR_LIVENESS属性的传入，且初始化接口需要传入
 );
 

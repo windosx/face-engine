@@ -7,8 +7,7 @@ import (
 	"github.com/windosx/face-engine/v3/util"
 )
 
-var width, height = util.GetImageWidthAndHeight("./test.jpg")
-var imageData = util.GetResizedBGR("./test.jpg")
+var imageInfo = util.GetResizedImageInfo("./test.jpg")
 
 func main() {
 	// 激活SDK
@@ -27,7 +26,7 @@ func main() {
 		return
 	}
 	// 检测人脸
-	info, err := engine.DetectFaces(width-width%4, height, ColorFormatBGR24, imageData)
+	info, err := engine.DetectFaces(imageInfo.Width, imageInfo.Height, ColorFormatBGR24, imageInfo.DataUInt8)
 	if err != nil {
 		fmt.Printf("%#v\n", err)
 		return
@@ -35,12 +34,12 @@ func main() {
 	// 获取单人脸信息
 	singleFaceInfoArr := GetSingleFaceInfo(info)
 	// 获取人脸特征码
-	f1, err := engine.FaceFeatureExtract(width-width%4, height, ColorFormatBGR24, imageData, singleFaceInfoArr[0])
+	f1, err := engine.FaceFeatureExtract(imageInfo.Width, imageInfo.Height, ColorFormatBGR24, imageInfo.DataUInt8, singleFaceInfoArr[0])
 	if err != nil {
 		fmt.Printf("%#v\n", err)
 		return
 	}
-	f2, err := engine.FaceFeatureExtract(width-width%4, height, ColorFormatBGR24, imageData, singleFaceInfoArr[1])
+	f2, err := engine.FaceFeatureExtract(imageInfo.Width, imageInfo.Height, ColorFormatBGR24, imageInfo.DataUInt8, singleFaceInfoArr[1])
 	if err != nil {
 		fmt.Printf("%#v\n", err)
 		return
@@ -55,7 +54,7 @@ func main() {
 	f1.Release()
 	f2.Release()
 	// 处理人脸数据
-	if err = engine.Process(width-width%4, height, ColorFormatBGR24, imageData, info, EnableAge|EnableGender|EnableFace3DAngle|EnableLiveness); err != nil {
+	if err = engine.Process(imageInfo.Width, imageInfo.Height, ColorFormatBGR24, imageInfo.DataUInt8, info, EnableAge|EnableGender|EnableFace3DAngle|EnableLiveness); err != nil {
 		fmt.Printf("%#v\n", err)
 		return
 	}
