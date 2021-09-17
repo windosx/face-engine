@@ -8,7 +8,7 @@
 
 由于公司是虹软的重度用户，出于工作需要和个人兴趣，寻思着用golang封装一下C++的SDK，利用golang的跨平台特性达到跨平台的效果（当然前提是SDK支持的平台）
 
-目前支持的SDK版本有：[v2.x](https://github.com/windosx/face-engine/tree/v2.2.0) [v3.x](https://github.com/windosx/face-engine/tree/v3.0.7) [v4.0.0](https://github.com/windosx/face-engine)
+目前支持的SDK版本有：[v2.x](https://github.com/windosx/face-engine/tree/v2.2.0) [v3.x](https://github.com/windosx/face-engine/tree/v3.0.8) [v4.0.0](https://github.com/windosx/face-engine)
 
 # 二、编译环境与运行环境的准备
 
